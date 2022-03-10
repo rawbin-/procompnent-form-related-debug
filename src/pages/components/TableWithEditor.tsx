@@ -1,6 +1,6 @@
 import { Button, Input, InputNumber, Modal, Table } from 'antd';
-import ProForm, { ProFormInstance, ProFormList } from '@ant-design/pro-form'
-import React, { MutableRefObject, useRef, useState } from 'react';
+import ProForm, { ProFormList } from '@ant-design/pro-form'
+import React, { useState } from 'react';
 import { FormLayout } from "antd/es/form/Form";
 import { FormLabelAlign } from "antd/es/form/interface";
 
@@ -50,12 +50,23 @@ const BookFormPart = ({ name }: { name: any }) => {
 };
 
 
-const LineDataForm = ({ formRef }: { formRef: MutableRefObject<ProFormInstance> }) => {
-  console.log(formRef)
-  return <ProForm {...formItemLayout} formRef={formRef} onFinish={(values) => {
-    console.log('onFinish:values:', values)
-    return Promise.resolve()
-  }}>
+const LineDataForm = ({ currentId }) => {
+  return <ProForm
+    {...formItemLayout}
+    onFinish={(values) => {
+      console.log('onFinish:values:', values)
+      return Promise.resolve()
+    }}
+    params={{
+      currentId
+    }}
+    request={(params) => {
+      console.log('params:', params)
+      return Promise.resolve(tableDataSource.find((item) => {
+        return item.name === params.currentId
+      }))
+    }}
+  >
     <ProForm.Item {...formItemLayout} name={'name'} label={'姓名'}>
       <Input></Input>
     </ProForm.Item>
@@ -76,8 +87,8 @@ const LineDataForm = ({ formRef }: { formRef: MutableRefObject<ProFormInstance> 
 };
 
 const TableWithEditor = () => {
+  const [currentId, setCurrentId] = useState('')
   const [showEditor, setShowEditor] = useState(false);
-  const formRef = useRef<ProFormInstance>()
   const tableColumns = [{
     title: '姓名',
     dataIndex: 'name',
@@ -98,10 +109,7 @@ const TableWithEditor = () => {
         console.log('currentData:', record)
         // 要先把form搞出来才行
         setShowEditor(true);
-        setTimeout(() => {
-          // @ts-ignore
-          formRef?.current?.setFieldsValue(record);
-        }, 0)
+        setCurrentId(record.name)
 
       }}>编辑</Button>;
     },
@@ -112,7 +120,7 @@ const TableWithEditor = () => {
     <Modal title={'行编辑'} visible={showEditor} onCancel={() => {
       setShowEditor(false);
     }}>
-      <LineDataForm formRef={formRef}></LineDataForm>
+      <LineDataForm currentId={currentId}></LineDataForm>
     </Modal>
   </>;
 };
